@@ -31,6 +31,7 @@ import (
 	"github.com/ethereum/go-ethereum/consensus"
 	"github.com/ethereum/go-ethereum/consensus/clique"
 	"github.com/ethereum/go-ethereum/consensus/ethash"
+	"github.com/ethereum/go-ethereum/consensus/simple_pow"
 	"github.com/ethereum/go-ethereum/core"
 	"github.com/ethereum/go-ethereum/core/bloombits"
 	"github.com/ethereum/go-ethereum/core/types"
@@ -228,15 +229,18 @@ func CreateConsensusEngine(ctx *node.ServiceContext, config *ethash.Config, chai
 		log.Warn("Ethash used in shared mode")
 		return ethash.NewShared()
 	default:
-		engine := ethash.New(ethash.Config{
-			CacheDir:       ctx.ResolvePath(config.CacheDir),
-			CachesInMem:    config.CachesInMem,
-			CachesOnDisk:   config.CachesOnDisk,
-			DatasetDir:     config.DatasetDir,
-			DatasetsInMem:  config.DatasetsInMem,
-			DatasetsOnDisk: config.DatasetsOnDisk,
-		})
-		engine.SetThreads(-1) // Disable CPU mining
+		/*
+			engine := ethash.New(ethash.Config{
+				CacheDir:       ctx.ResolvePath(config.CacheDir),
+				CachesInMem:    config.CachesInMem,
+				CachesOnDisk:   config.CachesOnDisk,
+				DatasetDir:     config.DatasetDir,
+				DatasetsInMem:  config.DatasetsInMem,
+				DatasetsOnDisk: config.DatasetsOnDisk,
+			})
+			engine.SetThreads(-1) // Disable CPU mining
+		*/
+		engine := simple_pow.New()
 		return engine
 	}
 }
