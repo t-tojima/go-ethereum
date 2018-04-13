@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/consensus"
+	"github.com/ethereum/go-ethereum/consensus/ethash"
 	"github.com/ethereum/go-ethereum/core/state"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/log"
@@ -32,7 +33,7 @@ func hashBlockWithNonce(number *big.Int, nonce uint64) (string, error) {
 }
 
 func checkNonce(hash string) {
-	for _, b := range hash[len(hash)-6:] {
+	for _, b := range hash[len(hash)-12:] {
 		if b != '0' {
 			return
 		}
@@ -56,6 +57,7 @@ func isValidNonce(number *big.Int, nonce uint64) (bool, error) {
 }
 
 func (s *SimplePow) Seal(chain consensus.ChainReader, block *types.Block, stop <-chan struct{}) (*types.Block, error) {
+	log.Info(fmt.Sprintf("currentHeaderNumber: %d", chain.CurrentHeader().Number.Uint64()))
 	log.Info(fmt.Sprintf("sealing block: number=%d", block.Number().Uint64()))
 	header := types.CopyHeader(block.Header())
 
@@ -108,7 +110,11 @@ func (s *SimplePow) VerifyUncles(chain consensus.ChainReader, block *types.Block
 }
 
 func (s *SimplePow) Prepare(chain consensus.ChainReader, header *types.Header) error {
-	header.Difficulty = big.NewInt(0)
+	parent := chain.GetHeader(header.ParentHash, header.Number.Uint64()-1)
+	if parent == nil {
+		return consensus.ErrUnknownAncestor
+	}
+	header.Difficulty = ethash.CalcDifficulty(chain.Config(), header.Time.Uint64(), parent)
 	return nil
 }
 

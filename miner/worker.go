@@ -291,9 +291,11 @@ func (self *worker) wait() {
 	for {
 		mustCommitNewWork := true
 		for result := range self.recv {
+			log.Info("[Miner] worker: received result")
 			atomic.AddInt32(&self.atWork, -1)
 
 			if result == nil {
+				log.Info("[Miner] worker: result is nil")
 				continue
 			}
 			block := result.Block
@@ -317,6 +319,7 @@ func (self *worker) wait() {
 			// check if canon block and write transactions
 			if stat == core.CanonStatTy {
 				// implicit by posting ChainHeadEvent
+				log.Info("[Miner] won't commit network")
 				mustCommitNewWork = false
 			}
 			// Broadcast the block and announce chain insertion event
@@ -335,6 +338,7 @@ func (self *worker) wait() {
 			self.unconfirmed.Insert(block.NumberU64(), block.Hash())
 
 			if mustCommitNewWork {
+				log.Info("[Miner] commiting network")
 				self.commitNewWork()
 			}
 		}
